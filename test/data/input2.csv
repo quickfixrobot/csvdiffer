@@ -1,7 +1,8 @@
-productno, productname, productquantity, productprice
-1, Apple, 100, 108.50
-2, Orange, 160, 60.75
-3, Grapes, 200, 75.55
-4, Pomegranate, 50, 45.00
-5, Muskmelon, 25, 30.00
-6, Watermelon, 60, 15.00
+productno,productname,productquantity,productprice
+003,Grapes,200,75.55
+004,Pomegranate,50,45.00
+005,Muskmelon,25,30.00
+006,Watermelon,60,15.00
+001,Apple,100,108.50
+002,Orange,160,60.75
+
