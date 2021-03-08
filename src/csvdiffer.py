@@ -18,56 +18,157 @@ class CsvDiffer:
         self.file1_keycols = inputs.file1_keycols
         self.file2_keycols = inputs.file2_keycols
         self.outfile = inputs.outfile
+        self.df1 = None
+        self.df2 = None
+        self.df1cols = None
+        self.df2cols = None
     def csvdiffer(self):
         try:
-            df1 = pd.read_csv(self.csvfile1, sep=self.sep,dtype="string")
-            df1['ROWNUM'] = np.arange(df1.shape[0])
+            self.df1 = pd.read_csv(self.csvfile1, sep=self.sep, dtype="string")
+            self.df1['ROWNUM'] = np.arange(self.df1.shape[0])
+            self.df1cols = self.df1.columns
             if self.file1_keycols.strip(', ').isdigit():
                 column_list = []
                 for colnum in self.file1_keycols.strip().split(','):
                     column_list.append(int(colnum.strip()))
-                df1.set_index(list(df1.columns[column_list]), inplace=True)
+                #self.df1.set_index(list(self.df1.columns[column_list]), inplace=True)
+                self.df1['indexcol'] = self.df1[column_list].apply(tuple, axis=1)
+                self.df1 = self.df1.set_index(['indexcol'])
+
+                #self.df1 = self.df1.set_index(list(self.df1.columns[column_list]))
+
             else:
                 column_list = []
                 for colstr in self.file1_keycols.strip().split(','):
                     column_list.append(colstr.strip())
-                df1.set_index(column_list, inplace=True)
+                self.df1['indexcol'] = self.df1[column_list].apply(tuple, axis=1)
+                self.df1 = self.df1.set_index(['indexcol'])
+                #self.df1.set_index(column_list, inplace=True)
+                #self.df1 = self.df1.set_index(column_list)
 
-            df1.index = pd.MultiIndex.from_tuples([(ix[0], str(ix[1])) for ix in df1.index.tolist()])
-            df1.sort_index(inplace=True)
-            print(df1.index)
-            print(df1)
-            print(df1.loc[('001', 'Apple')])
+            self.df1.index = pd.MultiIndex.from_tuples([(ix[0], str(ix[1])) for ix in self.df1.index.tolist()])
+            #self.df1.sort_index(inplace=True)
+            self.df1 = self.df1.sort_index()
+            print(self.df1.index)
+            print(self.df1)
+            print(self.df1.loc[('001', 'Apple')])
         except IOError as e:
             print("Could not read file:", self.csvfile1)
             print("I/O error({0}): {1}".format(e.errno, e.strerror))
         except Exception as e:
-            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error here:", sys.exc_info()[0])
             print(e)
         try:
-            df2 = pd.read_csv(self.csvfile2, sep=self.sep,dtype="string")
+            self.df2 = pd.read_csv(self.csvfile2, sep=self.sep,dtype="string")
+            self.df2cols = self.df2.columns
             if self.file2_keycols.strip(', ').isdigit():
                 column_list = []
                 for colnum in self.file2_keycols.strip().split(','):
                     column_list.append(int(colnum.strip()))
-                df2.set_index(list(df2.columns[column_list]), inplace=True)
+                #self.df2.set_index(list(self.df2.columns[column_list]), inplace=True)
+                self.df2['indexcol'] = self.df2[column_list].apply(tuple, axis=1)
+                self.df2 = self.df2.set_index(['indexcol'])
+                #self.df2 = self.df2.set_index(list(self.df2.columns[column_list]))
             else:
                 column_list = []
                 for colstr in self.file2_keycols.strip().split(','):
                     column_list.append(colstr.strip())
-                df2.set_index(column_list, inplace=True)
+                self.df2['indexcol'] = self.df2[column_list].apply(tuple, axis=1)
+                self.df2 = self.df2.set_index(['indexcol'])
+                #self.df2.set_index(column_list, inplace=True)
+                #self.df2 = self.df2.set_index(column_list)
 
-            df2.index = pd.MultiIndex.from_tuples([(ix[0], str(ix[1])) for ix in df2.index.tolist()])
-            df2.sort_index(inplace=True)
-            print(df2.index)
-            print(df2.loc[('001', 'Apple')])
+            self.df2.index = pd.MultiIndex.from_tuples([(ix[0], str(ix[1])) for ix in self.df2.index.tolist()])
+            #self.df2.sort_index(inplace=True)
+            self.df2 = self.df2.sort_index()
+            print(self.df2.index)
+            print(self.df2)
+            print(self.df2.loc[('001', 'Apple')])
         except IOError as e:
             print("Could not read file:", self.csvfile2)
             print("I/O error({0}): {1}".format(e.errno, e.strerror))
         except Exception as e:
-            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error here:", sys.exc_info()[0])
             print(e)
+        self.diffFrames()
+    def diffFrames(self):
+        print("Starting the diff")
+        counter = 0
 
+        colnames = self.df1.columns
+        #colnames = self.df1cols.values
+
+        print(colnames)
+        idx1 = self.df1.index
+        idx2 = self.df2.index
+        idxunion = idx1.union(idx2)
+        print("idxunion")
+        print(idxunion)
+        ignoreColumns = ['ROWNO']
+        for index in idxunion:
+            print(index)
+            for val in self.df1cols.values:
+                print(val)
+                #print(self.df1.loc[index])
+
+            leftfilerow = []
+            rightfilerow = []
+            mismatchFound = False
+            leftLineMissing = False
+            rightLineMissing = False
+            for col in colnames[:-1]:
+                if col in ignoreColumns:
+                    continue
+                try:
+                    leftword = self.df1.loc[index,col] #.values[0]
+                    print("Leftword")
+                    print(leftword)
+                except KeyError as kerror:
+                    leftword = ""
+                    leftLineMissing = True
+                    print("Keyerror")
+                except Exception as exception:
+                    leftword = ""
+                    leftLineMissing = True
+                    print("Exception: {}".format(type(exception).__name__))
+                    print("Exception message: {}".format(exception))
+                try:
+                    rightword = self.df2.loc[index, col] #.values[0]
+                    print("Rightword")
+                    print(rightword)
+                except KeyError as kerror:
+                    rightword = ""
+                    rightLineMissing = True
+                    rightIndex = ["" for elem in index]
+                except Exception as exception:
+                    rightword = ""
+                    rightLineMissing = True
+                    rightIndex = ["" for elem in index]
+                    #print("Exception: {}".format(type(exception).__name__))
+                    #print("Exception message: {}".format(exception))
+                if(leftLineMissing and not(rightLineMissing)):
+                    mismatchFound = True
+                elif((not leftLineMissing) and rightLineMissing):
+                    mismatchFound = True
+
+                if(not(pd.isnull(leftword) and pd.isnull(rightword))):
+                    if(not isinstance(leftword, str)):
+                        leftword = str(leftword)
+                    if(not isinstance(rightword, str)):
+                        rightword = str(rightword)
+                    if(leftword != rightword and (not rightLineMissing) and (not leftLineMissing)):
+                        leftfilerow.append("<<<"+leftword+">>>")
+                        rightfilerow.append("<<<"+rightword+">>>")
+                        mismatchFound = True
+                    else:
+                        leftfilerow.append(leftword)
+                        rightfilerow.append(rightword)
+            if(mismatchFound):
+                print('---------------------------------------------------------------------------------------')
+                print(','.join(leftfilerow))
+                print(','.join(rightfilerow))
+                print('Mismatch found')
+                print('---------------------------------------------------------------------------------------')
 
 def main():
     try:

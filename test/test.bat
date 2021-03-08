@@ -1,1 +1,1 @@
-python ..\src\csvdiffer.py -s=, -o=outfile.txt -k="0,1" -c="0,1" data\input1.csv data\input2.csv
+python ..\src\csvdiffer.py -s=, -o=outfile.txt -k="productno,productname" -c="productno,productname" data\input1.csv data\input2.csv

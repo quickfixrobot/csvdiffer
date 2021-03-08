@@ -4,5 +4,6 @@ productno,productname,productquantity,productprice
 005,Muskmelon,25,30.00
 006,Watermelon,60,15.00
 001,Apple,100,108.50
-002,Orange,160,60.75
+002,Orange,160,60.95
+007,Banana,200,50.00
 
